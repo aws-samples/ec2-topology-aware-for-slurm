@@ -5,7 +5,7 @@ It enables jobs to be placed on nodes in close network proximity with [Slurm top
 
 In November 2023, AWS announced the [Instance Topology API](https://aws.amazon.com/about-aws/whats-new/2023/11/instance-topology-api-ml-hpc-workloads/).
 It provides customers a unique per account hierarchical view of the relative proximity between Amazon EC2 instances.
-To learn more, please visit the [EC2 User Guide] (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-topology.html).
+To learn more, please visit the [EC2 User Guide](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-topology.html).
 
 This solution walks you through the steps to:
 - Create a topology configuration for Slurm based the EC2 Instance topology information.
@@ -17,9 +17,12 @@ This solution walks you through the steps to:
 ## Prerequisites
 
 Before starting, make sure you have the following permission on the AWS ParallelCluster HeadNode:
+
 ```bash
 ec2:DescribeInstanceTopology
 ```
+
+You can add this by adding the `arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess` managed policy to the HeadNode [AdditionalIamPolicies](https://docs.aws.amazon.com/parallelcluster/latest/ug/HeadNode-v3.html#yaml-HeadNode-Iam-AdditionalIamPolicies) config.
 
 ## Create the topology configuration
 You start creating the `topology.conf` file that describes the network topology of the Amazon EC2 Instances of your cluster.
