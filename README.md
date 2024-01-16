@@ -36,7 +36,7 @@ For this step and the following, you will need to become `root` user create the 
 sudo -s
 ```
 
-Let's create a Python Virtual Environment and run the `ec2-topology.py` Python script that will create the `topology.conf` file at `/opt/slurm/etc/`.
+Let's create a Python Virtual Environment.
 ```bash
 export AWS_DEFAULT_REGION=$(TOKEN=`curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"` \
 && curl -H "X-aws-ec2-metadata-token: $TOKEN" -v http://169.254.169.254/latest/meta-data/placement/region)
@@ -44,10 +44,18 @@ export AWS_DEFAULT_REGION=$(TOKEN=`curl -X PUT "http://169.254.169.254/latest/ap
 python3 -m venv env
 source env/bin/activate
 
+python3 -m pip install --upgrade pip
 pip3 install -r requirements.txt
+```
 
+Run the `ec2-topology.py` Python script that will create the `topology.conf` file at `/opt/slurm/etc/`.
+```bash
 python3 ec2-topology.py --cluster_name [CLUSTER_NAME] --instance_type [INSTANCE_TYPE]
+```
 
+Exit the Python Virtual Environment.
+
+```bash
 deactivate
 ```
 
