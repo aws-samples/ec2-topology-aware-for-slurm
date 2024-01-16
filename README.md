@@ -14,6 +14,13 @@ This solution walks you through the steps to:
 
 **NOTE**:We recommend this solution for static compute cluster.
 
+## Prerequisites
+
+Before starting, make sure you have the following permission on the AWS ParallelCluster HeadNode:
+```bash
+ec2:DescribeInstanceTopology
+```
+
 ## Create the topology configuration
 You start creating the `topology.conf` file that describes the network topology of the Amazon EC2 Instances of your cluster.
 
@@ -31,6 +38,9 @@ sudo -s
 
 Let's create a Python Virtual Environment and run the `ec2-topology.py` Python script that will create the `topology.conf` file at `/opt/slurm/etc/`.
 ```bash
+export AWS_DEFAULT_REGION=$(TOKEN=`curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"` \
+&& curl -H "X-aws-ec2-metadata-token: $TOKEN" -v http://169.254.169.254/latest/meta-data/placement/region)
+
 python3 -m venv env
 source env/bin/activate
 
