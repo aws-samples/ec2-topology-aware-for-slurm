@@ -84,6 +84,9 @@ systemctl restart slurmctld
 
 Your Slurm jobs will now be scheduled based on the Amazon EC2 instance topology.
 
+## Authors
+Maxime Hugues (AWS)
+
 ## Security
 
 See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
