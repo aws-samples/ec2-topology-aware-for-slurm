@@ -58,10 +58,9 @@ def get_instances_topology(ids):
     client = boto3.Session().client('ec2')
 
     response = client.describe_instance_topology(InstanceIds=ids)
-    instances = []
 
-    for i in response['Instances']:
-        instances.append(i)
+    instances = []
+    instances = response['Instances'].copy()
 
     while 'NextToken' in response:
         response = client.describe_instance_topology(
@@ -134,6 +133,10 @@ def parse_args():
     return parser.parse_args()
 
 
+def chunk(l, size):
+    return [l[pos:pos + size] for pos in range(0, len(l), size)]
+
+
 def main():
     logger.setLevel(logging.INFO)
     logging.basicConfig(
@@ -153,8 +156,8 @@ def main():
         quit()
 
     instances = []
-    for i in instance_ids:
-        instances += get_instances_topology([i])
+    for i in chunk(instance_ids, 100):
+        instances += get_instances_topology(i)
 
     switches = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
     for i in instances:
