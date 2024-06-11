@@ -91,12 +91,18 @@ def get_instance_private_ip(ec2_instance):
             return n['PrivateIpAddress']
 
 
-def get_slurm_node_name(ip_address):
+def get_slurm_node_info():
     p = subprocess.run(['scontrol', 'show', 'nodes', '--json'],
                        capture_output=True)
-    data = json.loads(p.stdout)
+    return json.loads(p.stdout)
 
-    for i in data['nodes']:
+
+SLURM_NODES = get_slurm_node_info()
+
+
+def get_slurm_node_name(ip_address):
+
+    for i in SLURM_NODES['nodes']:
         if i['address'] == ip_address:
             node_name = i['name']
     return node_name
