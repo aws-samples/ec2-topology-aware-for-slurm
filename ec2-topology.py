@@ -79,8 +79,8 @@ def write_topo(switches, slurm_path):
         f.write(f'SwitchName={k} Switches={",".join(list(v.keys()))}\n')
         for k2, v2 in v.items():
             f.write(f'SwitchName={k2} Switches={",".join(list(v2.keys()))}\n')
-        for k3, v3 in v2.items():
-            f.write(f'SwitchName={k3} Nodes={",".join(v3)}\n')
+            for k3, v3 in v2.items():
+                f.write(f'SwitchName={k3} Nodes={",".join(v3)}\n')
     f.close()
 
 
