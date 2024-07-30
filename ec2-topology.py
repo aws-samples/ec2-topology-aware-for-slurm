@@ -44,12 +44,12 @@ def get_instances(cluster_name, instance_type):
     except botocore.exceptions.ClientError as e:
         logger.error('An error occurred: %s', e)
 
-    instance_ids = []
+    instances = []
     for i in response['Reservations']:
         for j in i['Instances']:
-            instance_ids.append(j['InstanceId'])
+            instances.append(j)
 
-    return instance_ids
+    return instances
 
 
 def get_instances_topology(ids):
@@ -84,8 +84,8 @@ def write_topo(switches, slurm_path):
     f.close()
 
 
-def get_instance_private_ip(ec2_instance):
-    for n in ec2_instance.network_interfaces_attribute:
+def get_instance_primary_private_ip(ec2_instance):
+    for n in ec2_instance['NetworkInterfaces']:
         if n['Attachment']['DeviceIndex'] == 0 and n['Attachment'][
                 'NetworkCardIndex'] == 0:
             return n['PrivateIpAddress']
@@ -108,14 +108,14 @@ def get_slurm_node_name(ip_address):
     return node_name
 
 
-def get_slurm_hostname(instance_id):
-    logger.info('Get EC2 Instance IDs and hotname association')
+def instances_slurm_hostnames_mapping(instances):
+    logger.info('Get EC2 Instance IDs and hotnames association')
 
-    ec2 = boto3.resource('ec2')
-    instance = ec2.Instance(instance_id)
-    private_ip = get_instance_private_ip(instance)
-    hostname = get_slurm_node_name(private_ip)
-    return hostname
+    ids_hostnames_map = {}
+    for i in instances:
+        private_ip = get_instance_primary_private_ip(i)
+        ids_hostnames_map[i['InstanceId']] = get_slurm_node_name(private_ip)
+    return ids_hostnames_map
 
 
 def parse_args():
@@ -154,26 +154,29 @@ def main():
     instance_type = args.instance_type
     cluster_name = args.cluster_name
 
-    instance_ids = get_instances(cluster_name, instance_type)
+    instances = get_instances(cluster_name, instance_type)
 
-    if not instance_ids:
+    if not instances:
         logger.error('No running %s EC2 Instances found in the cluster %s',
                      instance_type, cluster_name)
         quit()
 
-    instances = []
-    for i in chunk(instance_ids, 100):
-        instances += get_instances_topology(i)
+    instances_topology = []
+    for i in chunk(instances, 100):
+        ids = [k['InstanceId'] for k in i]
+        instances_topology += get_instances_topology(ids)
+
+    instances_slurm_hostnames = instances_slurm_hostnames_mapping(instances)
 
     switches = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
-    for i in instances:
+    for i in instances_topology:
         if 'NetworkNodes' in i:
             top_level = i['NetworkNodes'][0]
             mid_level = i['NetworkNodes'][1]
             low_level = i['NetworkNodes'][2]
 
             switches[top_level][mid_level][low_level].append(
-                get_slurm_hostname(i['InstanceId']))
+                instances_slurm_hostnames[i['InstanceId']])
 
     switches = json.loads(json.dumps(switches))
     write_topo(switches, args.slurm_path)
