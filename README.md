@@ -103,7 +103,7 @@ To get an visual output (.png) format of your current clusters topology, run the
 ```bash
 python generate-topology-chart.py --cluster_name [CLUSTER_NAME] --instance_type [INSTANCE_TYPE]
 ```
- *Note, this is a "point-in-time" snapshot of current cluster topology. If new instancs are added, or instances are replaced, then topology chart will need to be re-run. 
+ *Note, this is a "point-in-time" snapshot of current cluster topology. If new instancs are added, or instances are replaced, then topology chart will need to be re-run.* 
 
  ![Example Output](/assets/example-topo.png)
 
