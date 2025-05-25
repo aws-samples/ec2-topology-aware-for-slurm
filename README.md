@@ -84,8 +84,31 @@ systemctl restart slurmctld
 
 Your Slurm jobs will now be scheduled based on the Amazon EC2 instance topology.
 
+## Get a visual representation of your cluster's topology:
+
+Let's create a Python Virtual Environment.
+```bash
+export AWS_DEFAULT_REGION=$(TOKEN=`curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"` \
+&& curl -H "X-aws-ec2-metadata-token: $TOKEN" -v http://169.254.169.254/latest/meta-data/placement/region)
+
+python3 -m venv env
+source env/bin/activate
+
+python3 -m pip install --upgrade pip
+pip3 install -r requirements.txt
+```
+
+To get an visual output (.png) format of your current clusters topology, run the following command:
+
+```bash
+python generate-topology-chart.py --cluster_name [CLUSTER_NAME] --instance_type [INSTANCE_TYPE]
+```
+ *Note, this is a "point-in-time" snapshot of current cluster topology. If new instancs are added, or instances are replaced, then topology chart will need to be re-run. 
+
+ ![Example Output](/assets/example-topo.png)
+
 ## Authors
-Maxime Hugues (AWS)
+Maxime Hugues (AWS), Matthew Nightingale (AWS)
 
 ## Security
 
