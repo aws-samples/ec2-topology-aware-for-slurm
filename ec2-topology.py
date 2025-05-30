@@ -71,16 +71,20 @@ def get_instances_topology(ids):
     return instances
 
 
+def recurse_topo(file, topology):
+    for k, v in topology.items():
+        if isinstance(v, dict):
+            file.write(f'SwitchName={k} Switches={",".join(list(v.keys()))}\n')
+            recurse_topo(file, v)
+        else:
+            file.write(f'SwitchName={k} Nodes={",".join(v)}\n')
+
+
 def write_topo(switches, slurm_path):
     logger.info('Write topology file at %s/topology.conf', slurm_path)
 
     f = open(slurm_path + '/topology.conf', 'w+')
-    for k, v in switches.items():
-        f.write(f'SwitchName={k} Switches={",".join(list(v.keys()))}\n')
-        for k2, v2 in v.items():
-            f.write(f'SwitchName={k2} Switches={",".join(list(v2.keys()))}\n')
-            for k3, v3 in v2.items():
-                f.write(f'SwitchName={k3} Nodes={",".join(v3)}\n')
+    recurse_topo(f, switches)
     f.close()
 
 
@@ -143,6 +147,25 @@ def chunk(l, size):
     return [l[pos:pos + size] for pos in range(0, len(l), size)]
 
 
+def create_nested_dict():
+    return defaultdict(create_nested_dict)
+
+
+def add_instance_nested(dic, val, network, max_level, cur_level=0):
+
+    if cur_level < max_level:
+        dic[network[cur_level]] = add_instance_nested(dic[network[cur_level]],
+                                                      val, network, max_level,
+                                                      cur_level + 1)
+
+        return dic
+    else:
+        if len(dic) == 0:
+            return [val]
+        else:
+            return dic + [val]
+
+
 def main():
     logger.setLevel(logging.INFO)
     logging.basicConfig(
@@ -168,15 +191,15 @@ def main():
 
     instances_slurm_hostnames = instances_slurm_hostnames_mapping(instances)
 
-    switches = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+    switches = create_nested_dict()
     for i in instances_topology:
-        if 'NetworkNodes' in i:
-            top_level = i['NetworkNodes'][0]
-            mid_level = i['NetworkNodes'][1]
-            low_level = i['NetworkNodes'][2]
+        network = i.get('NetworkNodes')
+        if network is not None:
+            nb_network_level = len(network)
 
-            switches[top_level][mid_level][low_level].append(
-                instances_slurm_hostnames[i['InstanceId']])
+            add_instance_nested(switches,
+                                instances_slurm_hostnames[i['InstanceId']],
+                                network, nb_network_level)
 
     switches = json.loads(json.dumps(switches))
     write_topo(switches, args.slurm_path)
