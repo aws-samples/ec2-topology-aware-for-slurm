@@ -32,21 +32,26 @@ def get_cluster_instances(cluster_name, instance_type):
 def get_topology(instance_ids):
     """Get network topology for the specified instances"""
     client = boto3.client('ec2')
+    topology = []
     
-    response = client.describe_instance_topology(InstanceIds=instance_ids)
-    topology = response['Instances']
-
-    # Get additional pages if any
-    while 'NextToken' in response:
-        response = client.describe_instance_topology(
-            InstanceIds=instance_ids,
-            NextToken=response['NextToken']
-        )
+    # Process instance IDs in batches of 100
+    for i in range(0, len(instance_ids), 100):
+        batch = instance_ids[i:i+100]
+        
+        response = client.describe_instance_topology(InstanceIds=batch)
         topology.extend(response['Instances'])
+
+        # Get additional pages if any
+        while 'NextToken' in response:
+            response = client.describe_instance_topology(
+                InstanceIds=batch,
+                NextToken=response['NextToken']
+            )
+            topology.extend(response['Instances'])
 
     logger.info(f'Retrieved topology for {len(topology)} instances')
     return topology
-
+    
 def create_visualization(topology, cluster_name, output_file='network_topology'):
     """Create a visual representation of the network topology"""
     dot = graphviz.Digraph(comment='Network Topology')
